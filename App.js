@@ -1,39 +1,19 @@
-// import React from 'react';
-// import { View, StyleSheet } from 'react-native';
-// import Button from './components/button/Button';
-// import Fatec360SplashScreen from './screens/splash/Fatec360SplashScreen';
-
-
-// const App = () => {
-//   return (
-//     <View style={styles.container}>
-//       <Fatec360SplashScreen />
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-// });
-
-// export default App;
-
-// App.js
+// App.js (raiz do projeto)
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';  // IMPORTAÇÃO CORRETA AQUI
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import Fatec360SplashScreen from './screens/splash/Fatec360SplashScreen';
 import Login from './screens/login/Login';
+import LoginGestor from './screens/login/loginGestor';    // ①  novo import  (note o “l” minúsculo)
+
+// se preferir, escreva LoginGestor.js com inicial maiúscula e então:
+// import LoginGestor from './screens/login/LoginGestor';
 
 const Stack = createNativeStackNavigator();
 
-const App = () => {
+export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
@@ -46,22 +26,25 @@ const App = () => {
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {showSplash ? (
-            <Stack.Screen name="Splash" component={Fatec360SplashScreen} />
+            <Stack.Screen
+              name="Splash"
+              component={Fatec360SplashScreen}
+            />
           ) : (
-            <Stack.Screen name="Login" component={Login} />
+            <>
+              <Stack.Screen name="Login" component={Login} />
+              <Stack.Screen
+                name="LoginGestor"   // ②  nova rota
+                component={LoginGestor}
+              />
+            </>
           )}
         </Stack.Navigator>
       </NavigationContainer>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
+  container: { flex: 1, backgroundColor: 'white' },
 });
-
-export default App;
-
