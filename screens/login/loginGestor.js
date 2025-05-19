@@ -5,10 +5,13 @@ import {
   StyleSheet, ActivityIndicator
 } from 'react-native';
 
+import { useNavigation } from '@react-navigation/native';
+
 export default function LoginGestor() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const navigation = useNavigation();
 
   const handleSubmit = async () => {
     setError('');
@@ -25,6 +28,7 @@ export default function LoginGestor() {
       setIsSubmitting(true);
       await new Promise(r => setTimeout(r, 1000)); // simula API
       console.log('Login OK:', email);
+      navigation.replace('HomeGestor');
     } catch {
       setError('Erro no login');
     } finally {

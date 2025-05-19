@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeGestor   from './screens/gestor/HomeGestor'; 
 
 import Fatec360SplashScreen from './screens/splash/Fatec360SplashScreen';
 import Login from './screens/login/Login';
@@ -37,6 +38,8 @@ export default function App() {
                 name="LoginGestor"   // ②  nova rota
                 component={LoginGestor}
               />
+
+              <Stack.Screen name="HomeGestor"  component={HomeGestor} />
             </>
           )}
         </Stack.Navigator>
