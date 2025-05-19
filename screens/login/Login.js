@@ -39,3 +39,15 @@ const styles = StyleSheet.create({
 });
 
 export default Login;
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: 'white', // define fundo branco aqui também
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// });
+
+
+// export default Login;

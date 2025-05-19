@@ -22,6 +22,10 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  if (showSplash) {
+    return <Fatec360SplashScreen />; // apenas mostra a splash por 5 segundos
+  }
+
   return (
     <View style={styles.container}>
       <NavigationContainer>
@@ -47,6 +51,7 @@ export default function App() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
