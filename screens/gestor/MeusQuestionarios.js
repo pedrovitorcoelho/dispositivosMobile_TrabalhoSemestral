@@ -1,13 +1,57 @@
 "use client"
 
-import React from "react"
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, ScrollView } from "react-native"
-import { Ionicons } from "@expo/vector-icons"
-import QuestionnaireCard from "../../components/QuestionnaireCard";
-import BottomNavigation from "../../components/BottomNavigation";
+import { useState, useEffect } from "react"
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView } from "react-native"
+import QuestionnaireCard from "../../components/QuestionnaireCard"
+import BottomNavigation from "../../components/BottomNavigation"
+import Toast from "../../components/Toast"
+import Header from '../../components/Header';
 
-export default function MeusQuestionarios({ navigation }) {
-  const [activeTab, setActiveTab] = React.useState("documents")
+export default function MeusQuestionarios({ navigation, route }) {
+  const [activeTab, setActiveTab] = useState("documents")
+  const [questionarios, setQuestionarios] = useState([
+    {
+      id: 1,
+      title: "Equipamentos da biblioteca",
+      questionCount: 5,
+    },
+    {
+      id: 2,
+      title: "Equipamentos do laboratório de química",
+      questionCount: 5,
+    },
+  ])
+  const [showToast, setShowToast] = useState(false)
+
+  useEffect(() => {
+    // Verificar se há um novo questionário nos parâmetros da rota
+    if (route.params?.novoQuestionario) {
+      const novoQuestionario = route.params.novoQuestionario
+
+      // Verificar se o questionário já existe na lista para evitar duplicação
+      const questionarioExistente = questionarios.find((q) => q.id === novoQuestionario.id)
+
+      if (!questionarioExistente) {
+        // Adicionar o novo questionário à lista
+        setQuestionarios((prevQuestionarios) => [
+          ...prevQuestionarios,
+          {
+            id: novoQuestionario.id,
+            title: novoQuestionario.titulo,
+            questionCount: novoQuestionario.numPerguntas,
+          },
+        ])
+      }
+
+      // Mostrar toast de sucesso se solicitado
+      if (route.params.showSuccessToast) {
+        setShowToast(true)
+      }
+
+      // Limpar os parâmetros da rota para evitar duplicação ao navegar de volta
+      navigation.setParams({ novoQuestionario: null, showSuccessToast: false })
+    }
+  }, [route.params])
 
   const handleTabPress = (tab) => {
     setActiveTab(tab)
@@ -15,49 +59,56 @@ export default function MeusQuestionarios({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#5c6670" />
-        </TouchableOpacity>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications-outline" size={24} color="#5c6670" />
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header - EXATAMENTE como na tela CriarQuestionario */}
+          <Header navigation={navigation} />
+
+          {/* Title Section */}
+          <Text style={styles.title}>Equipamentos</Text>
+          <Text style={styles.subtitle}>Meus questionários criados sobre equipamentos</Text>
+
+          {/* Content */}
+          <View style={styles.cardsContainer}>
+            {questionarios.map((questionario) => (
+              <QuestionnaireCard
+                key={questionario.id}
+                title={questionario.title}
+                questionCount={questionario.questionCount}
+                onPress={() => {
+                  // Handle card press
+                }}
+              />
+            ))}
+          </View>
+
+          {/* Create Button */}
+          <TouchableOpacity 
+            style={styles.createButton} 
+            onPress={() => navigation.navigate("CriarQuestionarios")}
+          >
+            <Text style={styles.buttonText}>Criar novo questionário</Text>
           </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Title Section */}
-      <View style={styles.titleContainer}>
-        <Text style={styles.title}>Equipamentos</Text>
-        <Text style={styles.subtitle}>Meus questionários criados sobre equipamentos</Text>
-      </View>
-
-      {/* Content */}
-      <ScrollView style={styles.content}>
-        <QuestionnaireCard
-          title="Equipamentos da biblioteca"
-          questionCount={5}
-          onPress={() => {
-            // Handle card press
-          }}
-        />
-
-        {/* Spacer to push the button to the bottom */}
-        <View style={styles.spacer} />
-      </ScrollView>
-
-      {/* Create Button */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.createButton}>
-          <Text style={styles.buttonText}>Criar novo questionário</Text>
-        </TouchableOpacity>
-      </View>
+          
+          {/* Spacer for bottom navigation */}
+          <View style={{ height: 76 }} />
+        </ScrollView>
+      </SafeAreaView>
 
       {/* Bottom Navigation */}
-      <BottomNavigation activeTab={activeTab} onTabPress={handleTabPress} />
-    </SafeAreaView>
+      <View style={styles.bottomNavContainer}>
+        <BottomNavigation activeTab={activeTab} onTabPress={handleTabPress} />
+      </View>
+
+      {/* Toast de sucesso - AGORA como overlay absoluto */}
+      {showToast && (
+        <Toast visible={showToast} message="Questionário salvo com sucesso!" onHide={() => setShowToast(false)} />
+      )}
+    </View>
   )
 }
 
@@ -66,29 +117,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+  safeArea: {
+    flex: 1,
   },
-  backButton: {
-    padding: 8,
-  },
-  headerRight: {
-    flexDirection: "row",
-  },
-  notificationButton: {
-    padding: 8,
-  },
-  titleContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+  scrollContainer: {
+    padding: 22, // EXATAMENTE como na tela CriarQuestionario
   },
   title: {
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: "600",
     color: "#374151",
     marginBottom: 8,
@@ -96,27 +132,30 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: "#6b7280",
+    marginBottom: 24,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  spacer: {
-    flex: 1,
-    minHeight: 200, // Ensure there's space to scroll
-  },
-  buttonContainer: {
-    padding: 16,
+  cardsContainer: {
+    marginBottom: 24,
   },
   createButton: {
-    backgroundColor: "#5c6670",
+    backgroundColor: "#4A6572",
     borderRadius: 8,
-    padding: 16,
+    paddingVertical: 16,
     alignItems: "center",
+    marginBottom: 32,
   },
   buttonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
+  },
+  bottomNavContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
   },
 })

@@ -4,10 +4,17 @@ import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeGestor   from './screens/gestor/HomeGestor'; 
-
 import Fatec360SplashScreen from './screens/splash/Fatec360SplashScreen';
 import Login from './screens/login/Login';
 import LoginGestor from './screens/login/loginGestor';    // ①  novo import  (note o “l” minúsculo)
+import CriarQuestionarios from './screens/gestor/CriarQuestionarios'; // novo import
+import MeusQuestionarios from './screens/gestor/MeusQuestionarios';
+import QuestionarioCriado from './screens/gestor/QuestionarioCriado';
+import PainelRespostas from './screens/gestor/PainelRespostas';
+import ListaRespostas from './screens/gestor/ListaRespostas';
+import DetalhesAluno from './screens/gestor/DetalhesAluno';
+
+
 
 // se preferir, escreva LoginGestor.js com inicial maiúscula e então:
 // import LoginGestor from './screens/login/LoginGestor';
@@ -44,6 +51,12 @@ export default function App() {
               />
 
               <Stack.Screen name="HomeGestor"  component={HomeGestor} />
+              <Stack.Screen name="CriarQuestionarios" component={CriarQuestionarios} />
+              <Stack.Screen name="MeusQuestionarios" component={MeusQuestionarios} />
+              <Stack.Screen name="QuestionarioCriado" component={QuestionarioCriado} />
+              <Stack.Screen name="PainelRespostas" component={PainelRespostas} />
+              <Stack.Screen name="ListaRespostas" component={ListaRespostas} />
+              <Stack.Screen name="DetalhesAluno" component={DetalhesAluno} />
             </>
           )}
         </Stack.Navigator>
