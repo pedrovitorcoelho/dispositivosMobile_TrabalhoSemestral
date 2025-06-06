@@ -61,7 +61,7 @@ export default function MeusQuestionarios({ navigation, route }) {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
@@ -86,18 +86,19 @@ export default function MeusQuestionarios({ navigation, route }) {
             ))}
           </View>
 
-          {/* Create Button */}
-          <TouchableOpacity 
-            style={styles.createButton} 
+          
+
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* Create Button */}
+          {/* Create Button - fixo acima da BottomNavigation */}
+          <TouchableOpacity
+            style={styles.createButtonFixed}
             onPress={() => navigation.navigate("CriarQuestionarios")}
           >
             <Text style={styles.buttonText}>Criar novo questionário</Text>
           </TouchableOpacity>
-          
-          {/* Spacer for bottom navigation */}
-          <View style={{ height: 76 }} />
-        </ScrollView>
-      </SafeAreaView>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNavContainer}>
@@ -137,13 +138,19 @@ const styles = StyleSheet.create({
   cardsContainer: {
     marginBottom: 24,
   },
-  createButton: {
-    backgroundColor: "#4A6572",
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginBottom: 32,
-  },
+createButtonFixed: {
+  position: "absolute",
+  left: 22,
+  right: 22,
+  bottom: 88, // 56 da BottomNavigation + 32 de espaço
+  backgroundColor: "#4A6572",
+  borderRadius: 8,
+  paddingVertical: 16,
+  alignItems: "center",
+  zIndex: 10,
+},
+
+
   buttonText: {
     color: "#fff",
     fontSize: 16,

@@ -21,7 +21,7 @@ const Login = () => {
 
       <Button
         variant="secondary"
-        onPress={() => alert('Entrou como aluno')}
+        onPress={() => navigation.navigate('LoginAluno')}
       >
         Entre como aluno/professor
       </Button>

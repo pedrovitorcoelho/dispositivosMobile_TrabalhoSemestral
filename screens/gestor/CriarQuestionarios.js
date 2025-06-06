@@ -309,7 +309,7 @@ export default function CriarQuestionario() {
             </View>
           )}
 
-          {/* Botão salvar */}
+   {/* Botão salvar */}
           <TouchableOpacity
             style={[styles.salvarButton, (!titulo.trim() || perguntas.length === 0) && styles.salvarButtonDisabled]}
             onPress={salvar}
@@ -319,11 +319,13 @@ export default function CriarQuestionario() {
               Salvar questionário ({perguntas.length} pergunta{perguntas.length !== 1 ? "s" : ""})
             </Text>
           </TouchableOpacity>
-
+          
           <View style={{ height: bottomNavHeight + 20 }} />
+
         </ScrollView>
       </SafeAreaView>
 
+      
       <View style={styles.bottomNavContainer}>
         <BottomNavigation activeTab={activeTab} onTabPress={handleTabPress} />
       </View>
@@ -492,12 +494,24 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#3C4A5D",
   },
+
+  //  spacer: {
+  //   flex: 1
+  // },
+  
   salvarButton: {
-    backgroundColor: "#4A6572",
+    // backgroundColor: "#4A6572",
+    // paddingVertical: 16,
+    // borderRadius: 8,
+    // alignItems: "center",
+    // marginBottom: 32,
     paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 32,
+    borderRadius: 8, 
+    alignItems: 'center',
+    backgroundColor: '#4A6572',
+    // Ensure button stays at bottom
+    // marginBottom: 'auto'
+    bottom: 0,
   },
   salvarButtonDisabled: {
     backgroundColor: "#A0A0A0",
