@@ -18,6 +18,7 @@ import LoginAluno from './screens/login/LoginAluno'
 import AvaliacaoQuestionarioAluno from './screens/aluno/AvaliacaoQuestionarioAluno';
 import EnviarFeedbackAluno from './screens/aluno/EnviarFeedBackAluno';
 import QuestionariosDisponiveisAluno from './screens/aluno/QuestionariosDisponiveisAluno';
+import MeusQuestionariosRespondidos from './screens/aluno/MeusQuestionariosRespondidos';
 
 
 // se preferir, escreva LoginGestor.js com inicial maiúscula e então:
@@ -66,6 +67,7 @@ export default function App() {
               <Stack.Screen name="AvaliacaoQuestionarioAluno" component={AvaliacaoQuestionarioAluno} />
               <Stack.Screen name="EnviarFeedBackAluno" component={EnviarFeedbackAluno} />
               <Stack.Screen name="QuestionariosDisponiveisAluno" component={QuestionariosDisponiveisAluno} />
+              <Stack.Screen name="MeusQuestionariosRespondidos" component={MeusQuestionariosRespondidos} />
             </>
           )}
         </Stack.Navigator>
