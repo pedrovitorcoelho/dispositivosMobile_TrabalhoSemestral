@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons"
 export default function BottomNavigation({ activeTab, onTabPress, navigation }) {
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.navItem} onPress={() => onTabPress("home")}>
+      <TouchableOpacity style={styles.navItem} onPress={() => navigation?.navigate("HomeGestor")}>
         <Ionicons name="home-outline" size={24} color={activeTab === "home" ? "#5c6670" : "#9ca3af"} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={() => onTabPress("documents")}>

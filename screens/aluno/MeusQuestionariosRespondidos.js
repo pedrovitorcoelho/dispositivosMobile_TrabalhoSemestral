@@ -1,71 +1,97 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView } from "react-native"
+import { useState } from "react"
+import { StyleSheet, Text, View, ScrollView, SafeAreaView } from "react-native"
 import QuestionnaireCard from "../../components/QuestionnaireCard"
 import BottomNavigationAluno from "../../components/BottomNavigationAluno"
 import Toast from "../../components/Toast"
-import Header from '../../components/Header';
+import Header from "../../components/Header"
+import { useNavigation, useFocusEffect } from "@react-navigation/native"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import StorageService from "../../services/storage-service"
+import React from "react"
 
-export default function MeusQuestionarios({ navigation, route }) {
+export default function MeusQuestionariosRespondidos({ route }) {
+  const navigation = useNavigation()
   const [activeTab, setActiveTab] = useState("documents")
-  const [questionarios, setQuestionarios] = useState([
-    {
-      id: 1,
-      title: "Equipamentos da biblioteca",
-      questionCount: 5,
-    },
-    {
-      id: 2,
-      title: "Equipamentos do laboratório de química",
-      questionCount: 5,
-    },
-  ])
+  const [questionarios, setQuestionarios] = useState([])
   const [showToast, setShowToast] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // Verificar se há um novo questionário nos parâmetros da rota
-    if (route.params?.novoQuestionario) {
-      const novoQuestionario = route.params.novoQuestionario
+  // Carregar dados quando a tela ganhar foco
+  useFocusEffect(
+    React.useCallback(() => {
+      carregarQuestionariosRespondidos()
+    }, []),
+  )
 
-      // Verificar se o questionário já existe na lista para evitar duplicação
-      const questionarioExistente = questionarios.find((q) => q.id === novoQuestionario.id)
+  const carregarQuestionariosRespondidos = async () => {
+    try {
+      setLoading(true)
+      console.log("🔄 === CARREGANDO QUESTIONÁRIOS RESPONDIDOS ===")
 
-      if (!questionarioExistente) {
-        // Adicionar o novo questionário à lista
-        setQuestionarios((prevQuestionarios) => [
-          ...prevQuestionarios,
-          {
-            id: novoQuestionario.id,
-            title: novoQuestionario.titulo,
-            questionCount: novoQuestionario.numPerguntas,
-          },
-        ])
+      // 1. BUSCAR USUÁRIO LOGADO
+      const usuarioLogadoString = await AsyncStorage.getItem("fatec360_usuario_logado")
+      if (!usuarioLogadoString) {
+        console.log("❌ Nenhum usuário logado encontrado")
+        return
       }
 
-      // Mostrar toast de sucesso se solicitado
-      if (route.params.showSuccessToast) {
-        setShowToast(true)
-      }
+      const usuario = JSON.parse(usuarioLogadoString)
+      console.log("👤 Usuário logado:", JSON.stringify(usuario, null, 2))
 
-      // Limpar os parâmetros da rota para evitar duplicação ao navegar de volta
-      navigation.setParams({ novoQuestionario: null, showSuccessToast: false })
+      // 2. BUSCAR QUESTIONÁRIOS RESPONDIDOS DO USUÁRIO
+      const todasRespostas = await StorageService.getTodasRespostas()
+      console.log("📊 Total de respostas no sistema:", todasRespostas.length)
+
+      // Filtrar respostas do usuário logado
+      const respostasDoUsuario = todasRespostas.filter((resposta) => {
+        const match = String(resposta.usuarioId) === String(usuario.id)
+        return match
+      })
+
+      console.log("📊 Respostas do usuário:", respostasDoUsuario.length)
+
+      // Formatar questionários para exibição
+      const questionariosFormatados = respostasDoUsuario
+        .sort((a, b) => new Date(b.dataEnvio) - new Date(a.dataEnvio))
+        .map((resposta) => ({
+          id: resposta.id,
+          title: resposta.questionarioTitulo || "Questionário",
+          category: resposta.categoria || "Geral",
+          questionCount: resposta.respostas?.length || 0,
+          dataResposta: new Date(resposta.dataEnvio).toLocaleDateString("pt-BR"),
+          respostaCompleta: resposta,
+        }))
+
+      setQuestionarios(questionariosFormatados)
+      console.log("📊 Questionários formatados:", questionariosFormatados.length)
+
+      console.log("✅ === DADOS CARREGADOS COM SUCESSO ===")
+    } catch (error) {
+      console.error("❌ Erro ao carregar questionários respondidos:", error)
+    } finally {
+      setLoading(false)
     }
-  }, [route.params])
+  }
 
   const handleTabPress = (tab) => {
     setActiveTab(tab)
-    // In a real app, you would navigate to the appropriate screen
+    navigation.navigate(tab)
+  }
+
+  const handleQuestionarioPress = (questionario) => {
+    navigation.navigate("VisualizarQuestionarioRespondido", {
+      questionarioId: questionario.id,
+      resposta: questionario.respostaCompleta,
+    })
   }
 
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header - EXATAMENTE como na tela CriarQuestionario */}
+        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          {/* Header */}
           <Header navigation={navigation} />
 
           {/* Title Section */}
@@ -74,30 +100,32 @@ export default function MeusQuestionarios({ navigation, route }) {
 
           {/* Content */}
           <View style={styles.cardsContainer}>
-            {questionarios.map((questionario) => (
-              <QuestionnaireCard
-                key={questionario.id}
-                title={questionario.title}
-                questionCount={questionario.questionCount}
-                onPress={() => {
-                  // Handle card press
-                }}
-              />
-            ))}
+            {loading ? (
+              <Text style={styles.loadingText}>Carregando questionários...</Text>
+            ) : questionarios.length > 0 ? (
+              questionarios.map((questionario) => (
+                <QuestionnaireCard
+                  key={questionario.id}
+                  title={questionario.title}
+                  questionCount={questionario.questionCount}
+                  category={questionario.category}
+                  date={questionario.dataResposta}
+                  onPress={() => handleQuestionarioPress(questionario)}
+                />
+              ))
+            ) : (
+              <Text style={styles.emptyText}>Você ainda não respondeu nenhum questionário.</Text>
+            )}
           </View>
-
-          
-
         </ScrollView>
       </SafeAreaView>
-
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNavContainer}>
         <BottomNavigationAluno activeTab={activeTab} onTabPress={handleTabPress} />
       </View>
 
-      {/* Toast de sucesso - AGORA como overlay absoluto */}
+      {/* Toast de sucesso */}
       {showToast && (
         <Toast visible={showToast} message="Questionário salvo com sucesso!" onHide={() => setShowToast(false)} />
       )}
@@ -114,7 +142,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContainer: {
-    padding: 22, // EXATAMENTE como na tela CriarQuestionario
+    padding: 22,
   },
   title: {
     fontSize: 18,
@@ -130,23 +158,17 @@ const styles = StyleSheet.create({
   cardsContainer: {
     marginBottom: 24,
   },
-createButtonFixed: {
-  position: "absolute",
-  left: 22,
-  right: 22,
-  bottom: 88, // 56 da BottomNavigation + 32 de espaço
-  backgroundColor: "#4A6572",
-  borderRadius: 8,
-  paddingVertical: 16,
-  alignItems: "center",
-  zIndex: 10,
-},
-
-
-  buttonText: {
-    color: "#fff",
+  loadingText: {
     fontSize: 16,
-    fontWeight: "600",
+    color: "#6b7280",
+    textAlign: "center",
+    marginTop: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#6b7280",
+    textAlign: "center",
+    marginTop: 20,
   },
   bottomNavContainer: {
     position: "absolute",

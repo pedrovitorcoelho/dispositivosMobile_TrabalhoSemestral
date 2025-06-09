@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import {
   StyleSheet,
   Text,
@@ -13,9 +13,10 @@ import {
   Alert,
 } from "react-native"
 import { Feather } from "@expo/vector-icons"
-import { useNavigation, useFocusEffect } from "@react-navigation/native"
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native"
 import BottomNavigation from "../../components/BottomNavigation"
 import Header from "../../components/Header"
+import StorageService from "../../services/storage-service"
 import React from "react"
 
 // Get screen dimensions
@@ -23,8 +24,13 @@ const { width, height } = Dimensions.get("window")
 
 export default function CriarQuestionario() {
   const navigation = useNavigation()
+  const route = useRoute()
   const scrollViewRef = useRef(null)
   const [activeTab, setActiveTab] = useState("home")
+
+  // Verificar se está em modo de edição
+  const modoEdicao = route.params?.modoEdicao || false
+  const questionarioParaEditar = route.params?.questionarioParaEditar
 
   // Estados para o questionário (título definido uma vez)
   const [categoria, setCategoria] = useState("Equipamentos")
@@ -39,12 +45,46 @@ export default function CriarQuestionario() {
   const [perguntas, setPerguntas] = useState([])
   const [perguntaCounter, setPerguntaCounter] = useState(1)
   const [inputHeight, setInputHeight] = useState(0)
+  const [salvando, setSalvando] = useState(false)
+
+  // Categorias disponíveis
+  const categorias = ["Conteúdos", "Professores", "Estrutura", "Estágios"]
+
+  // MUDANÇA 1: Pré-selecionar categoria se vier dos parâmetros
+  useEffect(() => {
+    // Se a categoria foi passada como parâmetro, usar ela
+    if (route.params?.categoria) {
+      setCategoria(route.params.categoria)
+      console.log(`🎯 Categoria pré-selecionada: ${route.params.categoria}`)
+    }
+
+    // Se está em modo de edição, preencher os dados
+    if (modoEdicao && questionarioParaEditar) {
+      setTitulo(questionarioParaEditar.titulo)
+      setCategoria(questionarioParaEditar.categoria)
+
+      // Converter perguntas para o formato da tela
+      const perguntasConvertidas =
+        questionarioParaEditar.perguntas?.map((p, index) => ({
+          id: index + 1,
+          texto: p.texto,
+          alternativas: p.alternativas || [],
+        })) || []
+
+      setPerguntas(perguntasConvertidas)
+      setPerguntaCounter(perguntasConvertidas.length + 1)
+
+      console.log(`✏️ Modo edição ativado para: ${questionarioParaEditar.titulo}`)
+    }
+  }, [route.params])
 
   useFocusEffect(
     React.useCallback(() => {
-      // Resetar contador de perguntas quando a tela é focada
-      setPerguntaCounter(1)
-    }, []),
+      // Resetar contador de perguntas quando a tela é focada (apenas se não for edição)
+      if (!modoEdicao) {
+        setPerguntaCounter(1)
+      }
+    }, [modoEdicao]),
   )
 
   const handleTabPress = (tab) => {
@@ -133,7 +173,7 @@ export default function CriarQuestionario() {
     }
   }
 
-  const salvar = () => {
+  const salvar = async () => {
     // Validar título
     if (!titulo.trim()) {
       Alert.alert("Atenção", "Por favor, adicione um título para o questionário.")
@@ -146,30 +186,49 @@ export default function CriarQuestionario() {
       return
     }
 
-    // Criar o objeto do questionário
-    const novoQuestionario = {
-      id: Date.now(),
-      titulo: titulo.trim(),
-      numPerguntas: perguntas.length,
-      perguntas: perguntas,
-      categoria: categoria,
+    try {
+      setSalvando(true)
+
+      // Criar o objeto do questionário
+      const dadosQuestionario = {
+        titulo: titulo.trim(),
+        categoria: categoria,
+        perguntas: perguntas,
+      }
+
+      let resultado
+
+      if (modoEdicao && questionarioParaEditar) {
+        // Atualizar questionário existente
+        resultado = await StorageService.atualizarQuestionario(questionarioParaEditar.id, dadosQuestionario)
+      } else {
+        // Criar novo questionário
+        resultado = await StorageService.salvarQuestionario(dadosQuestionario)
+      }
+
+      if (resultado.sucesso) {
+        // Resetar estados para um novo questionário
+        setTitulo("")
+        setPerguntas([])
+        setPerguntaCounter(1)
+        setPergunta("")
+        setAlternativas(["", ""])
+
+        // VOLTA PARA MEUS QUESTIONÁRIOS COM TOAST (como era antes)
+        navigation.navigate("MeusQuestionarios", {
+          categoria: categoria,
+          novoQuestionario: resultado.questionario,
+          showSuccessToast: true,
+          questionarioEditado: modoEdicao,
+        })
+      } else {
+        Alert.alert("Erro", resultado.erro)
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Erro interno. Tente novamente.")
+    } finally {
+      setSalvando(false)
     }
-
-    console.log("Questionário salvo:", novoQuestionario)
-
-    // Resetar estados para um novo questionário
-    setTitulo("")
-    setPerguntas([])
-    setPerguntaCounter(1)
-    setPergunta("")
-    setAlternativas(["", ""])
-
-    // Navegar para MeusQuestionarios com o novo questionário
-    navigation.navigate("MeusQuestionarios", {
-      categoria: categoria,
-      novoQuestionario: novoQuestionario,
-      showSuccessToast: true,
-    })
   }
 
   const bottomNavHeight = 56
@@ -185,7 +244,7 @@ export default function CriarQuestionario() {
           <Header navigation={navigation} />
 
           {/* Título da tela */}
-          <Text style={styles.title}>Criar questionário</Text>
+          <Text style={styles.title}>{modoEdicao ? "Editar questionário" : "Criar questionário"}</Text>
 
           {/* Seção de configuração do questionário (preenchida uma vez) */}
           <View style={styles.questionarioConfigSection}>
@@ -194,6 +253,24 @@ export default function CriarQuestionario() {
               <Text style={styles.dropdownText}>{categoria}</Text>
               <Feather name="chevron-down" size={22} color="#3C4A5D" />
             </TouchableOpacity>
+
+            {/* Dropdown options */}
+            {showDropdown && (
+              <View style={styles.dropdownOptions}>
+                {categorias.map((cat, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.dropdownOption}
+                    onPress={() => {
+                      setCategoria(cat)
+                      setShowDropdown(false)
+                    }}
+                  >
+                    <Text style={styles.dropdownOptionText}>{cat}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
             {/* Título do questionário - digitado uma vez */}
             <TextInput
@@ -309,23 +386,30 @@ export default function CriarQuestionario() {
             </View>
           )}
 
-   {/* Botão salvar */}
+          {/* Botão salvar */}
           <TouchableOpacity
-            style={[styles.salvarButton, (!titulo.trim() || perguntas.length === 0) && styles.salvarButtonDisabled]}
+            style={[
+              styles.salvarButton,
+              (!titulo.trim() || perguntas.length === 0 || salvando) && styles.salvarButtonDisabled,
+            ]}
             onPress={salvar}
-            disabled={!titulo.trim() || perguntas.length === 0}
+            disabled={!titulo.trim() || perguntas.length === 0 || salvando}
           >
             <Text style={styles.salvarButtonText}>
-              Salvar questionário ({perguntas.length} pergunta{perguntas.length !== 1 ? "s" : ""})
+              {salvando
+                ? modoEdicao
+                  ? "Salvando alterações..."
+                  : "Salvando..."
+                : modoEdicao
+                  ? `Salvar alterações (${perguntas.length} pergunta${perguntas.length !== 1 ? "s" : ""})`
+                  : `Salvar questionário (${perguntas.length} pergunta${perguntas.length !== 1 ? "s" : ""})`}
             </Text>
           </TouchableOpacity>
-          
-          <View style={{ height: bottomNavHeight + 20 }} />
 
+          <View style={{ height: bottomNavHeight + 20 }} />
         </ScrollView>
       </SafeAreaView>
 
-      
       <View style={styles.bottomNavContainer}>
         <BottomNavigation activeTab={activeTab} onTabPress={handleTabPress} />
       </View>
@@ -357,6 +441,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#E0E0E0",
+    position: "relative",
+    zIndex: 1000,
   },
   perguntaSection: {
     marginBottom: 24,
@@ -379,6 +465,31 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   dropdownText: {
+    fontSize: 14,
+    color: "#3C4A5D",
+  },
+  dropdownOptions: {
+    position: "absolute",
+    top: 70,
+    left: 16,
+    right: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    zIndex: 1001,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dropdownOption: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  dropdownOptionText: {
     fontSize: 14,
     color: "#3C4A5D",
   },
@@ -494,23 +605,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#3C4A5D",
   },
-
-  //  spacer: {
-  //   flex: 1
-  // },
-  
   salvarButton: {
-    // backgroundColor: "#4A6572",
-    // paddingVertical: 16,
-    // borderRadius: 8,
-    // alignItems: "center",
-    // marginBottom: 32,
     paddingVertical: 16,
-    borderRadius: 8, 
-    alignItems: 'center',
-    backgroundColor: '#4A6572',
-    // Ensure button stays at bottom
-    // marginBottom: 'auto'
+    borderRadius: 8,
+    alignItems: "center",
+    backgroundColor: "#4A6572",
     bottom: 0,
   },
   salvarButtonDisabled: {

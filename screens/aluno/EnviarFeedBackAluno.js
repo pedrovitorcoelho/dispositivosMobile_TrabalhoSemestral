@@ -16,6 +16,8 @@ import { Feather } from "@expo/vector-icons"
 import { useNavigation, useFocusEffect } from "@react-navigation/native"
 import BottomNavigationAluno from "../../components/BottomNavigationAluno"
 import Header from "../../components/Header"
+import Toast from "../../components/Toast"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import React from "react"
 
 // Get screen dimensions
@@ -33,6 +35,10 @@ export default function EnviarFeedbackAluno() {
 
   // Estados para controle
   const [showDropdown, setShowDropdown] = useState(false)
+
+  // Estados para o Toast
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState("")
 
   const tiposFeedback = ["Feedback"]
 
@@ -55,7 +61,31 @@ export default function EnviarFeedbackAluno() {
     setShowDropdown(false)
   }
 
-  const enviarFeedback = () => {
+  const salvarFeedbackNoStorage = async (feedback) => {
+    try {
+      console.log("💾 === SALVANDO FEEDBACK NO STORAGE ===")
+      console.log("📝 Feedback a ser salvo:", JSON.stringify(feedback, null, 2))
+
+      // Buscar feedbacks existentes
+      const feedbacksExistentes = await AsyncStorage.getItem("feedbacks_enviados")
+      const feedbacks = feedbacksExistentes ? JSON.parse(feedbacksExistentes) : []
+
+      console.log("📊 Feedbacks existentes:", feedbacks.length)
+
+      // Adicionar novo feedback
+      feedbacks.push(feedback)
+
+      // Salvar de volta no AsyncStorage
+      await AsyncStorage.setItem("feedbacks_enviados", JSON.stringify(feedbacks))
+
+      console.log("✅ Feedback salvo com sucesso! Total de feedbacks:", feedbacks.length)
+      console.log("💾 === SALVAMENTO CONCLUÍDO ===")
+    } catch (error) {
+      console.error("❌ Erro ao salvar feedback:", error)
+    }
+  }
+
+  const enviarFeedback = async () => {
     // Validar campos obrigatórios
     if (!titulo.trim()) {
       Alert.alert("Atenção", "Por favor, adicione um título para o feedback.")
@@ -67,32 +97,58 @@ export default function EnviarFeedbackAluno() {
       return
     }
 
-    // Criar o objeto do feedback
-    const novoFeedback = {
-      id: Date.now(),
-      tipo: tipoFeedback,
-      titulo: titulo.trim(),
-      descricao: descricao.trim(),
-      dataEnvio: new Date().toISOString(),
+    try {
+      console.log("🚀 === INICIANDO ENVIO DE FEEDBACK ===")
+
+      // Buscar usuário logado
+      const usuarioLogadoString = await AsyncStorage.getItem("fatec360_usuario_logado")
+      if (!usuarioLogadoString) {
+        Alert.alert("Erro", "Usuário não está logado.")
+        return
+      }
+
+      const usuarioLogado = JSON.parse(usuarioLogadoString)
+      console.log("👤 Usuário logado:", JSON.stringify(usuarioLogado, null, 2))
+
+      // Criar o objeto do feedback COM DADOS DO USUÁRIO
+      const novoFeedback = {
+        id: Date.now(),
+        tipo: tipoFeedback,
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        dataEnvio: new Date().toISOString(),
+        remetente: "aluno",
+        status: "enviado",
+        // DADOS DO USUÁRIO - IMPORTANTE!
+        usuarioId: usuarioLogado.id,
+        nomeUsuario: usuarioLogado.nome,
+        emailUsuario: usuarioLogado.email,
+        tipoUsuario: usuarioLogado.tipo,
+      }
+
+      console.log("📝 Novo feedback criado:", JSON.stringify(novoFeedback, null, 2))
+
+      // Salvar no AsyncStorage
+      await salvarFeedbackNoStorage(novoFeedback)
+
+      // Mostrar toast de sucesso
+      setToastMessage("Feedback enviado com sucesso!")
+      setShowToast(true)
+
+      // Navegar para HomeAluno após o toast desaparecer (3 segundos)
+      setTimeout(() => {
+        navigation.navigate("HomeAluno", { feedbackEnviado: true })
+      }, 3000)
+
+      console.log("🎉 === ENVIO DE FEEDBACK CONCLUÍDO ===")
+    } catch (error) {
+      console.error("❌ Erro ao enviar feedback:", error)
+      Alert.alert("Erro", "Ocorreu um erro ao enviar o feedback. Tente novamente.")
     }
+  }
 
-    console.log("Feedback enviado:", novoFeedback)
-
-    // Mostrar confirmação
-    Alert.alert("Sucesso", "Seu feedback foi enviado com sucesso! Obrigado pela sua contribuição.", [
-      {
-        text: "OK",
-        onPress: () => {
-          // Resetar formulário
-          setTipoFeedback("Feedback")
-          setTitulo("")
-          setDescricao("")
-
-          // Navegar de volta ou para tela inicial
-          navigation.goBack()
-        },
-      },
-    ])
+  const handleToastHide = () => {
+    setShowToast(false)
   }
 
   const bottomNavHeight = 56
@@ -180,6 +236,9 @@ export default function EnviarFeedbackAluno() {
       <View style={styles.bottomNavContainer}>
         <BottomNavigationAluno activeTab={activeTab} onTabPress={handleTabPress} />
       </View>
+
+      {/* Toast Component */}
+      <Toast visible={showToast} message={toastMessage} onHide={handleToastHide} />
     </View>
   )
 }

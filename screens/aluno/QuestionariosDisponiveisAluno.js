@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView } from "react-native"
+import { StyleSheet, Text, View, ScrollView, SafeAreaView } from "react-native"
 import { useNavigation, useRoute } from "@react-navigation/native"
+import { Feather } from "@expo/vector-icons"
 import BottomNavigationAluno from "../../components/BottomNavigationAluno"
 import Header from "../../components/Header"
 import QuestionnaireCard from "../../components/QuestionnaireCard"
+import StorageService from "../../services/storage-service"
 
 export default function QuestionariosDisponiveisAluno() {
   const navigation = useNavigation()
@@ -13,58 +15,82 @@ export default function QuestionariosDisponiveisAluno() {
   const [activeTab, setActiveTab] = useState("documents")
 
   // Estado para armazenar os questionários disponíveis
-  const [questionarios, setQuestionarios] = useState([
-    {
-      id: 1,
-      title: "Sua opinião sobre os conteúdos de Economia",
-      questionCount: 5,
-      category: "Conteúdos",
-    },
-    {
-      id: 2,
-      title: "Dê nota para os conteúdos de Cálculo I",
-      questionCount: 2,
-      category: "Conteúdos",
-    },
-  ])
+  const [questionarios, setQuestionarios] = useState([])
+  const [loading, setLoading] = useState(true)
 
   // Estado para armazenar a categoria atual
   const [categoria, setCategoria] = useState("Conteúdos")
 
+  // Mapear as chaves de categoria para nomes de exibição
+  const categoriasMap = {
+    conteudos: "Conteúdos",
+    professores: "Professores",
+    estrutura: "Estrutura",
+    estagios: "Estágios",
+  }
+
   useEffect(() => {
     // Verificar se há uma categoria específica nos parâmetros da rota
     if (route.params?.categoria) {
-      setCategoria(route.params.categoria)
+      const categoriaParam = route.params.categoria
+      const categoriaDisplay = categoriasMap[categoriaParam] || categoriaParam
+      setCategoria(categoriaDisplay)
 
-      // Aqui você poderia fazer uma chamada à API para buscar questionários
-      // específicos da categoria selecionada
-      // fetchQuestionariosPorCategoria(route.params.categoria)
+      console.log(`🎯 Categoria recebida: ${categoriaParam} -> ${categoriaDisplay}`)
     }
+
+    // Carregar questionários da categoria
+    carregarQuestionarios()
   }, [route.params])
 
-  // Função simulada para buscar questionários por categoria
-  const fetchQuestionariosPorCategoria = (categoria) => {
-    // Em um app real, isso seria uma chamada à API
-    console.log(`Buscando questionários da categoria: ${categoria}`)
+  // Função para buscar questionários reais do StorageService
+  const carregarQuestionarios = async () => {
+    try {
+      setLoading(true)
 
-    // Simulando dados diferentes por categoria
-    if (categoria === "Equipamentos") {
-      setQuestionarios([
+      // Buscar TODOS os questionários criados pelos gestores
+      const todosQuestionarios = await StorageService.getTodosQuestionarios()
+
+      // Determinar qual categoria usar
+      const categoriaParam = route.params?.categoria
+      const categoriaDisplay = categoriaParam ? categoriasMap[categoriaParam] || categoriaParam : categoria
+
+      // Filtrar questionários por categoria
+      const questionariosFiltrados = todosQuestionarios
+        .filter((q) => q.categoria === categoriaDisplay)
+        .map((q) => ({
+          id: q.id,
+          title: q.titulo,
+          questionCount: q.perguntas?.length || 0,
+          category: q.categoria,
+          questionarioCompleto: q, // Guardar o questionário completo para passar adiante
+        }))
+
+      console.log(`📊 Encontrados ${questionariosFiltrados.length} questionários na categoria ${categoriaDisplay}`)
+
+      setQuestionarios(questionariosFiltrados)
+    } catch (error) {
+      console.error("❌ Erro ao carregar questionários:", error)
+
+      // Em caso de erro, usar dados de exemplo para a apresentação
+      const dadosExemplo = [
         {
-          id: 3,
-          title: "Avaliação dos equipamentos do laboratório",
-          questionCount: 8,
-          category: "Equipamentos",
-        },
-        {
-          id: 4,
-          title: "Feedback sobre os computadores da biblioteca",
+          id: "exemplo1",
+          title: "Avaliação dos conteúdos do semestre",
           questionCount: 3,
-          category: "Equipamentos",
+          category: "Conteúdos",
         },
-      ])
-    } else {
-      // Manter os questionários padrão de "Conteúdos"
+        {
+          id: "exemplo2",
+          title: "Qualidade dos materiais didáticos",
+          questionCount: 2,
+          category: "Conteúdos",
+        },
+      ]
+
+      setQuestionarios(dadosExemplo)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -74,13 +100,15 @@ export default function QuestionariosDisponiveisAluno() {
   }
 
   const abrirQuestionario = (questionario) => {
-    // Navegar para a tela de responder questionário
-    navigation.navigate("AvaliacaoQuestionarioAluno", { questionario })
-  }
-
-  const criarNovoQuestionario = () => {
-    // Navegar para a tela de criar questionário
-    navigation.navigate("CriarQuestionarios", { categoria })
+    // Navegar para a tela de responder questionário passando o questionário completo
+    navigation.navigate("AvaliacaoQuestionarioAluno", {
+      questionario: questionario.questionarioCompleto || {
+        id: questionario.id,
+        titulo: questionario.title,
+        categoria: questionario.category,
+        perguntas: [], // Fallback para dados de exemplo
+      },
+    })
   }
 
   return (
@@ -91,22 +119,34 @@ export default function QuestionariosDisponiveisAluno() {
           <Header navigation={navigation} />
 
           {/* Title Section */}
-          <Text style={styles.title}>{categoria.charAt(0).toUpperCase() + categoria.slice(1).toLowerCase()}</Text>
+          <Text style={styles.title}>{categoria}</Text>
           <Text style={styles.subtitle}>Esses são os questionários disponíveis sobre {categoria.toLowerCase()}!</Text>
 
           {/* Lista de questionários disponíveis */}
           <View style={styles.cardsContainer}>
-            {questionarios.map((questionario) => (
-              <QuestionnaireCard
-                key={questionario.id}
-                title={questionario.title}
-                questionCount={questionario.questionCount}
-                onPress={() => abrirQuestionario(questionario)}
-              />
-            ))}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Carregando questionários...</Text>
+              </View>
+            ) : questionarios.length > 0 ? (
+              questionarios.map((questionario) => (
+                <QuestionnaireCard
+                  key={questionario.id}
+                  title={questionario.title}
+                  questionCount={questionario.questionCount}
+                  onPress={() => abrirQuestionario(questionario)}
+                />
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Feather name="inbox" size={48} color="#C5C5C5" />
+                <Text style={styles.emptyStateText}>Nenhum questionário disponível</Text>
+                <Text style={styles.emptyStateSubText}>
+                  Não há questionários sobre {categoria.toLowerCase()} para responder no momento
+                </Text>
+              </View>
+            )}
           </View>
-
-        
         </ScrollView>
       </SafeAreaView>
 
@@ -143,6 +183,32 @@ const styles = StyleSheet.create({
   },
   cardsContainer: {
     marginBottom: 24,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#6b7280",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "#374151",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateSubText: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    maxWidth: "80%",
   },
   createButton: {
     backgroundColor: "#4A6572",

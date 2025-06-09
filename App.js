@@ -19,6 +19,10 @@ import AvaliacaoQuestionarioAluno from './screens/aluno/AvaliacaoQuestionarioAlu
 import EnviarFeedbackAluno from './screens/aluno/EnviarFeedBackAluno';
 import QuestionariosDisponiveisAluno from './screens/aluno/QuestionariosDisponiveisAluno';
 import MeusQuestionariosRespondidos from './screens/aluno/MeusQuestionariosRespondidos';
+import VisualizarQuestionario from './screens/gestor/VisualizarQuestionario';
+import MeusFeedbacksEnviados from './screens/aluno/MeusFeedBacksEnviados';
+import VisualizarQuestionarioRespondido from './screens/aluno/VisualizarQuestionarioRespondido';
+import VisualizarFeedback from './screens/aluno/VisualizarFeedback';
 
 
 // se preferir, escreva LoginGestor.js com inicial maiúscula e então:
@@ -68,6 +72,10 @@ export default function App() {
               <Stack.Screen name="EnviarFeedBackAluno" component={EnviarFeedbackAluno} />
               <Stack.Screen name="QuestionariosDisponiveisAluno" component={QuestionariosDisponiveisAluno} />
               <Stack.Screen name="MeusQuestionariosRespondidos" component={MeusQuestionariosRespondidos} />
+              <Stack.Screen name="MeusFeedbacksEnviados" component={MeusFeedbacksEnviados} />
+              <Stack.Screen name="VisualizarQuestionario" component={VisualizarQuestionario} />
+              <Stack.Screen name="VisualizarFeedback" component={VisualizarFeedback} />
+              <Stack.Screen name="VisualizarQuestionarioRespondido" component={VisualizarQuestionarioRespondido} />
             </>
           )}
         </Stack.Navigator>
