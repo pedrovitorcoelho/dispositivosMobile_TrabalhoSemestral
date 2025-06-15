@@ -1,70 +1,49 @@
-# Getting Started with Create React App
+# 📌 Projeto React - Gestão de Questionários Acadêmicos
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Bem-vindo ao repositório do **Projeto React - Gestão de Questionários Acadêmicos**! Este projeto foi desenvolvido para facilitar a gestão de questionários e feedbacks dentro de uma instituição de ensino.
 
-## Available Scripts
+## 🚀 Como Rodar o Projeto
 
-In the project directory, you can run:
+### 1️⃣ **Pré-requisitos**
+Antes de começar, certifique-se de ter instalado:
+- [Node.js](https://nodejs.org/)  
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)  
+- Um editor de código como **VS Code**
 
-### `npm start`
+### 2️⃣ **Clone o repositório**
+```bash
+git clone https://github.com/seu-usuario/seu-repositorio.git
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Acesse a pasta do projeto:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+cd nome-do-projeto
+```
 
-### `npm test`
+### 3️⃣ Instale as dependências
+Antes de rodar o projeto, instale as seguintes dependências:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install @react-navigation/native
+npm install @react-navigation/native-stack
+npm install react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated
+expo install @expo/vector-icons
+npm install @react-native-async-storage/async-storage
+```
 
-### `npm run build`
+### 4️⃣ Execute o projeto
+Para rodar o projeto, utilize o seguinte comando:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+expo start
+```
+Isso iniciará o servidor Expo e permitirá que você visualize o aplicativo em seu dispositivo físico ou em um emulador.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## ❓ Dúvidas
 
-### `npm run eject`
+Em caso de dúvidas ou sugestões, entre em contato com:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Pedro Coelho
+- Palloma Nobre
