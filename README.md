@@ -36,7 +36,7 @@ npm install @react-native-async-storage/async-storage
 Para rodar o projeto, utilize o seguinte comando:
 
 ```bash
-expo start
+npx expo start
 ```
 Isso iniciará o servidor Expo e permitirá que você visualize o aplicativo em seu dispositivo físico ou em um emulador.
 
